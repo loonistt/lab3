@@ -15,8 +15,11 @@ void showMenu() {
     cout << "8. Search pipes\n";
     cout << "9. Search compressor stations\n";
     cout << "10. Batch edit pipes\n";
-    cout << "11. Save to file\n";
-    cout << "12. Load from file\n";
+    cout << "11. Connect compressor stations\n";  // хглемемн
+    cout << "12. View gas network\n";  // мнбне
+    cout << "13. Topological sort\n";  // мнбне
+    cout << "14. Save to file\n";  // ядбхмсрн
+    cout << "15. Load from file\n";  // ядбхмсрн
     cout << "0. Exit\n\n";
     cout << "Please select an action: ";
 }

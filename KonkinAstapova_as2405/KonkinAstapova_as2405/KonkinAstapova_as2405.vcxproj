@@ -124,6 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="connection.cpp" />
     <ClCompile Include="cs.cpp" />
     <ClCompile Include="KonkinAstapova_as2405.cpp" />
     <ClCompile Include="checkshow.cpp" />
@@ -133,6 +134,7 @@
     <ClCompile Include="pipecsfunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="connection.h" />
     <ClInclude Include="cs.h" />
     <ClInclude Include="checkshow.h" />
     <ClInclude Include="logger.h" />

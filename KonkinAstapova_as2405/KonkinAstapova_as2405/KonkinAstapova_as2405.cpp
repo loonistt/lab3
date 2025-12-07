@@ -43,8 +43,8 @@ int main(int argc, char* argv[])
         showMenu();
 
         int action;
-        cout << "Select action (0-12): ";
-        action = GetCorrectNumber<int>(0, 12);
+        cout << "Select action (0-15): ";
+        action = GetCorrectNumber<int>(0, 15);
 
         try {
             switch (action) {
@@ -100,7 +100,19 @@ int main(int argc, char* argv[])
                 break;
             }
 
-            case 11: {
+            case 11:
+                system.connectCS();
+                break;
+
+            case 12:
+                system.viewNetwork();
+                break;
+
+            case 13:
+                system.topologicalSort();
+                break;
+
+            case 14: {
                 string filename;
                 cout << "Enter filename to save DATA: ";
                 INPUT_LINE(cin, filename);
@@ -108,7 +120,7 @@ int main(int argc, char* argv[])
                 break;
             }
 
-            case 12: {
+            case 15: {
                 string filename;
                 cout << "Enter filename to load DATA: ";
                 INPUT_LINE(cin, filename);
@@ -127,4 +139,4 @@ int main(int argc, char* argv[])
     }
 
     return 0;
-}
+} 

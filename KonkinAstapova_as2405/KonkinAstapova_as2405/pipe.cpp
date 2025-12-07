@@ -6,7 +6,7 @@ using namespace std;
 
 int Pipe::nextId = 1;
 
-Pipe::Pipe() : id(nextId++), length(0), diameter(0), fixing(false) {}
+Pipe::Pipe() : id(nextId++), length(0), diameter(0), fixing(false), inUse(false) {}
 
 void Pipe::editPipe() {
     cout << "Enter new pipe status (0 - in repair, 1 - working): ";
@@ -19,13 +19,19 @@ void Pipe::updateNextId(int loadedId) {
         nextId = loadedId + 1;
     }
 }
+void Pipe::decrementNextId() {
+    if (nextId > 1) {
+        nextId--;
+    }
+}
 
 ostream& operator<<(ostream& out, const Pipe& pipe) {
     out << "Pipe ID: " << pipe.id << "\n"
         << "Name: " << pipe.name << "\n"
         << "Length: " << pipe.length << "m\n"
         << "Diameter: " << pipe.diameter << "mm\n"
-        << "Status: " << (pipe.fixing ? "Working" : "In repair") << "\n\n";
+        << "Status: " << (pipe.fixing ? "Working" : "In repair") << "\n"
+        << "In use: " << (pipe.inUse ? "Yes" : "No") << "\n\n";
     return out;
 }
 
