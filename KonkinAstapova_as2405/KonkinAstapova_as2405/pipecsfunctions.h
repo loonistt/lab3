@@ -34,5 +34,7 @@ public:
     void saveToFile(const string& filename);
     void loadFromFile(const string& filename);
 
-    void clearAllData();
 };
+
+void loadPipeFromFile(istream& in, Pipe& pipe);
+void loadCSFromFile(istream& in, CS& cs);

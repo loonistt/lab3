@@ -318,43 +318,17 @@ void PipelineSystem::loadFromFile(const string& filename) {
         int pipeCount;
         file >> pipeCount;
         for (int i = 0; i < pipeCount; i++) {
-            int id;
-            file >> id;
             Pipe pipe;
-
-            string name;
-            getline(file >> ws, name);
-            pipe.setName(name);
-
-            float length, diameter;
-            bool fixing;
-            file >> length >> diameter >> fixing;
-            pipe.setLength(length);
-            pipe.setDiameter(diameter);
-            pipe.setFixing(fixing);
-
-            pipes.emplace(id, pipe);
+            loadPipeFromFile(file, pipe);  // Используем дружественную функцию
+            pipes.emplace(pipe.getId(), pipe);
         }
 
         int csCount;
         file >> csCount;
         for (int i = 0; i < csCount; i++) {
-            int id;
-            file >> id;
             CS cs;
-
-            string name;
-            getline(file >> ws, name);
-            cs.setName(name);
-
-            int workshop, activeWorkshop;
-            float score;
-            file >> workshop >> activeWorkshop >> score;
-            cs.setWorkshop(workshop);
-            cs.setActiveWorkshop(activeWorkshop);
-            cs.setScore(score);
-
-            stations.emplace(id, cs);
+            loadCSFromFile(file, cs);  // Используем дружественную функцию
+            stations.emplace(cs.getId(), cs);
         }
 
         file.close();
@@ -363,9 +337,4 @@ void PipelineSystem::loadFromFile(const string& filename) {
     else {
         cout << "Error opening file for reading.\n\n";
     }
-}
-
-void PipelineSystem::clearAllData() {
-    pipes.clear();
-    stations.clear();
 }

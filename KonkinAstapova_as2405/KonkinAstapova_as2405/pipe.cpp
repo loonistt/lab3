@@ -4,23 +4,19 @@
 #include <stdexcept>
 using namespace std;
 
+int Pipe::nextId = 1;
+
 Pipe::Pipe() : id(nextId++), length(0), diameter(0), fixing(false) {}
 
-void Pipe::setLength(float new_length) {
-    if (new_length > 0 && new_length <= 50) {
-        length = new_length;
-    }
-    else {
-        throw invalid_argument("Length must be between 0 and 50 meters");
-    }
+void Pipe::editPipe() {
+    cout << "Enter new pipe status (0 - in repair, 1 - working): ";
+    bool newStatus = GetCorrectBool();
+    fixing = newStatus;
 }
 
-void Pipe::setDiameter(float new_diameter) {
-    if (new_diameter > 0 && new_diameter <= 2500) {
-        diameter = new_diameter;
-    }
-    else {
-        throw invalid_argument("Diameter must be between 0 and 2500 millimeters");
+void Pipe::updateNextId(int loadedId) {
+    if (loadedId >= nextId) {
+        nextId = loadedId + 1;
     }
 }
 
@@ -39,21 +35,11 @@ istream& operator>>(istream& in, Pipe& pipe) {
 
     cout << "Enter pipe length (in meters, 0-50): ";
     float len = GetCorrectNumber<float>(0, 50);
-    if (len > 0 && len <= 50) {
-        pipe.length = len;
-    }
-    else {
-        throw invalid_argument("Length must be between 0 and 50 meters");
-    }
+    pipe.length = len;
 
     cout << "Enter pipe diameter (in millimeters, 0-2500): ";
     float diam = GetCorrectNumber<float>(0, 2500);
-    if (diam > 0 && diam <= 2500) {
-        pipe.diameter = diam;
-    }
-    else {
-        throw invalid_argument("Diameter must be between 0 and 2500 millimeters");
-    }
+    pipe.diameter = diam;
 
     cout << "Choose pipe status (0 - in repair, 1 - working): ";
     pipe.fixing = GetCorrectBool();
@@ -61,8 +47,9 @@ istream& operator>>(istream& in, Pipe& pipe) {
     return in;
 }
 
-void Pipe::editPipe() {
-    cout << "Enter new pipe status (0 - in repair, 1 - working): ";
-    bool newStatus = GetCorrectBool();
-    fixing = newStatus;  
+void loadPipeFromFile(istream& in, Pipe& pipe) {
+    in >> pipe.id;
+    getline(in >> ws, pipe.name);
+    in >> pipe.length >> pipe.diameter >> pipe.fixing;
+    Pipe::updateNextId(pipe.id);
 }

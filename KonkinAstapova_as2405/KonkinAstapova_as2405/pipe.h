@@ -14,21 +14,21 @@ private:
 
 public:
     Pipe();
-
+    
     int getId() const { return id; }
     string getName() const { return name; }
     float getLength() const { return length; }
     float getDiameter() const { return diameter; }
     bool getFixing() const { return fixing; }
+    void setFixing(bool new_fixing) { fixing = new_fixing; }
+    // Методы
+    void editPipe();
 
-    //void setName(const string& new_name) { name = new_name; }
-    //void setLength(float new_length);
-    //void setDiameter(float new_diameter);
-    //void setFixing(bool new_fixing) { fixing = new_fixing; }
-
+    // Дружественные функции
     friend ostream& operator<<(ostream& out, const Pipe& pipe);
     friend istream& operator>>(istream& in, Pipe& pipe);
-    void editPipe();
-};
+    friend void loadPipeFromFile(istream& in, Pipe& pipe);
 
-int Pipe::nextId = 1;
+    // Статический метод для обновления nextId
+    static void updateNextId(int loadedId);
+};
