@@ -15,7 +15,6 @@ private:
     unordered_map<int, Pipe> pipes;
     unordered_map<int, CS> stations;
     vector<Connection> connections;
-    unordered_map<int, list<int>> adjacencyList;
 
 public:
     PipelineSystem() {}
@@ -41,13 +40,24 @@ public:
     void connectCS();
     void viewNetwork();
     void topologicalSort();
-    bool hasCycleUtil(int v, unordered_map<int, bool>& visited, unordered_map<int, bool>& recStack);
-    bool hasCycle();
-    void topologicalSortUtil(int v, unordered_map<int, bool>& visited, list<int>& stack);
+    unordered_map<int, vector<int>> buildAdjacencyList() const;
+    bool hasCycleUtil(int v, unordered_map<int, bool>& visited, unordered_map<int, bool>& recStack,const unordered_map<int, vector<int>>& adjList) const;
+    bool hasCycle(const unordered_map<int, vector<int>>& adjList) const;
+    void topologicalSortUtil(int v, unordered_map<int, bool>& visited,list<int>& stack,const unordered_map<int, vector<int>>& adjList) const;
 
     int findFreePipeByDiameter(int diameter);
+
+    void disconnectCS();
+    void disconnectConnection();
+    void disconnectByPipe();
+
+    bool removeConnection(int startCS, int endCS);
+    void removeAllConnectionsWithCS(int csId);
+    void removeConnectionsByPipe(int pipeId);
 
 };
 
 void loadPipeFromFile(istream& in, Pipe& pipe);
 void loadCSFromFile(istream& in, CS& cs);
+
+extern const std::vector<int> ALLOWED_DIAMETERS;

@@ -8,6 +8,8 @@
 #include <queue>
 using namespace std;
 
+const std::vector<int> ALLOWED_DIAMETERS = { 500, 700, 1000, 1400 };
+
 void PipelineSystem::addPipe() {
     Pipe pipe;
     cin >> pipe;
@@ -311,6 +313,22 @@ int PipelineSystem::findFreePipeByDiameter(int diameter) {
     return -1;
 }
 
+unordered_map<int, vector<int>> PipelineSystem::buildAdjacencyList() const {
+    unordered_map<int, vector<int>> adjList;
+
+    for (const auto& conn : connections) {
+        int start = conn.getStartCS();
+        int end = conn.getEndCS();
+
+
+        if (stations.count(start) && stations.count(end)) {
+            adjList[start].push_back(end);
+        }
+    }
+
+    return adjList;
+}
+
 void PipelineSystem::connectCS() {
     if (stations.size() < 2) {
         cout << "Need at least 2 compressor stations to create a connection.\n\n";
@@ -409,18 +427,193 @@ void PipelineSystem::connectCS() {
         }
     }
 
-    Connection conn(startCS, endCS, pipeId, diameter);
+    Connection conn(startCS, endCS, pipeId);
     connections.push_back(conn);
 
     pipes[pipeId].setInUse(true);
-
-    adjacencyList[startCS].push_back(endCS);
 
     cout << "\nConnection created successfully!\n";
     cout << "Connection ID: " << conn.getId() << "\n";
     cout << "From CS " << startCS << " to CS " << endCS << "\n";
     cout << "Using pipe ID " << pipeId << " (Diameter: " << diameter << " mm)\n\n";
 }
+
+bool PipelineSystem::removeConnection(int startCS, int endCS) {
+    for (auto it = connections.begin(); it != connections.end(); ++it) {
+        if (it->getStartCS() == startCS && it->getEndCS() == endCS) {
+            int pipeId = it->getPipeId();
+
+            if (pipes.count(pipeId)) {
+                pipes[pipeId].setInUse(false);
+            }
+
+            connections.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+void PipelineSystem::removeAllConnectionsWithCS(int csId) {
+    connections.erase(
+        std::remove_if(connections.begin(), connections.end(),
+            [csId](const Connection& conn) {
+                return conn.getStartCS() == csId || conn.getEndCS() == csId;
+            }),
+        connections.end()
+    );
+
+    for (auto& pipe_pair : pipes) {
+        if (pipe_pair.second.getInUse()) {
+            bool stillUsed = false;
+            for (const auto& conn : connections) {
+                if (conn.getPipeId() == pipe_pair.first) {
+                    stillUsed = true;
+                    break;
+                }
+            }
+            if (!stillUsed) {
+                pipe_pair.second.setInUse(false);
+            }
+        }
+    }
+}
+
+void PipelineSystem::removeConnectionsByPipe(int pipeId) {
+    connections.erase(
+        std::remove_if(connections.begin(), connections.end(),
+            [pipeId](const Connection& conn) {
+                return conn.getPipeId() == pipeId;
+            }),
+        connections.end()
+    );
+
+    if (pipes.count(pipeId)) {
+        pipes[pipeId].setInUse(false);
+    }
+}
+
+void PipelineSystem::disconnectCS() {
+    if (stations.empty()) {
+        cout << "No compressor stations available.\n\n";
+        return;
+    }
+
+    cout << "Available compressor stations:\n";
+    for (const auto& cs_pair : stations) {
+        cout << "ID: " << cs_pair.first << " - " << cs_pair.second.getName() << endl;
+    }
+
+    cout << "\nEnter CS ID to disconnect: ";
+    int csId = GetCorrectNumber<int>(0, INT_MAX);
+
+    if (!stations.count(csId)) {
+        cout << "CS with ID " << csId << " not found.\n\n";
+        return;
+    }
+
+    bool hasConnections = false;
+    for (const auto& conn : connections) {
+        if (conn.getStartCS() == csId || conn.getEndCS() == csId) {
+            hasConnections = true;
+            break;
+        }
+    }
+
+    if (!hasConnections) {
+        cout << "CS " << csId << " has no connections.\n\n";
+        return;
+    }
+
+    cout << "Disconnect all connections with CS " << csId << "? (1 - yes, 0 - no): ";
+    int confirm = GetCorrectNumber<int>(0, 1);
+
+    if (confirm == 1) {
+        removeAllConnectionsWithCS(csId);
+        cout << "All connections with CS " << csId << " have been removed.\n\n";
+    }
+    else {
+        cout << "Operation cancelled.\n\n";
+    }
+}
+
+void PipelineSystem::disconnectConnection() {
+    if (connections.empty()) {
+        cout << "No connections available.\n\n";
+        return;
+    }
+
+    cout << "Current connections:\n";
+    for (const auto& conn : connections) {
+        cout << "Connection: CS " << conn.getStartCS() << " -> CS " << conn.getEndCS()
+            << " (Pipe ID: " << conn.getPipeId() << ")\n";
+    }
+
+    cout << "\nEnter start CS ID: ";
+    int startCS = GetCorrectNumber<int>(0, INT_MAX);
+    cout << "Enter end CS ID: ";
+    int endCS = GetCorrectNumber<int>(0, INT_MAX);
+
+    if (removeConnection(startCS, endCS)) {
+        cout << "Connection CS " << startCS << " -> CS " << endCS
+            << " has been removed.\n\n";
+    }
+    else {
+        cout << "Connection not found.\n\n";
+    }
+}
+
+void PipelineSystem::disconnectByPipe() {
+    if (pipes.empty()) {
+        cout << "No pipes available.\n\n";
+        return;
+    }
+
+    cout << "Available pipes:\n";
+    for (const auto& pipe_pair : pipes) {
+        if (pipe_pair.second.getInUse()) {
+            cout << "ID: " << pipe_pair.first << " - " << pipe_pair.second.getName()
+                << " (Diameter: " << pipe_pair.second.getDiameter() << " mm, In use: Yes)\n";
+        }
+    }
+
+    cout << "\nEnter pipe ID to disconnect: ";
+    int pipeId = GetCorrectNumber<int>(0, INT_MAX);
+
+    if (!pipes.count(pipeId)) {
+        cout << "Pipe with ID " << pipeId << " not found.\n\n";
+        return;
+    }
+
+    if (!pipes[pipeId].getInUse()) {
+        cout << "Pipe ID " << pipeId << " is not in use.\n\n";
+        return;
+    }
+
+    int count = 0;
+    for (const auto& conn : connections) {
+        if (conn.getPipeId() == pipeId) {
+            count++;
+        }
+    }
+
+    if (count == 0) {
+        cout << "No connections found using pipe ID " << pipeId << ".\n\n";
+        return;
+    }
+
+    cout << "Found " << count << " connection(s) using pipe ID " << pipeId << ".\n";
+    cout << "Disconnect all? (1 - yes, 0 - no): ";
+    int confirm = GetCorrectNumber<int>(0, 1);
+
+    if (confirm == 1) {
+        removeConnectionsByPipe(pipeId);
+        cout << "All connections using pipe ID " << pipeId << " have been removed.\n\n";
+    }
+    else {
+        cout << "Operation cancelled.\n\n";
+    }
+}   
 
 void PipelineSystem::viewNetwork() {
     if (connections.empty()) {
@@ -432,30 +625,37 @@ void PipelineSystem::viewNetwork() {
 
     cout << "Connections:\n";
     for (const auto& conn : connections) {
-        cout << conn;
+        cout << "CS " << conn.getStartCS() << " -> CS " << conn.getEndCS()
+            << " (Pipe ID: " << conn.getPipeId();
+
+        int pipeId = conn.getPipeId();
+        if (pipes.count(pipeId)) {
+            cout << ", Diameter: " << pipes.at(pipeId).getDiameter() << " mm";
+        }
+        cout << ")\n";
     }
 
-    cout << "\nNetwork structure:\n";
-    for (const auto& conn : connections) {
-        cout << "CS " << conn.getStartCS() << " -> CS " << conn.getEndCS()
-            << " (Pipe ID: " << conn.getPipeId()
-            << ", Diameter: " << conn.getDiameter() << " mm)\n";
-    }
+    auto adjList = buildAdjacencyList();
 
     cout << "\nAdjacency list:\n";
-    for (const auto& adj_pair : adjacencyList) {
-        cout << "CS " << adj_pair.first << " -> ";
-        for (int neighbor : adj_pair.second) {
-            cout << "CS " << neighbor << " ";
+    if (adjList.empty()) {
+        cout << "No valid connections (some CS might be deleted)\n";
+    }
+    else {
+        for (const auto& adj_pair : adjList) {
+            cout << "CS " << adj_pair.first << " -> ";
+            for (int neighbor : adj_pair.second) {
+                cout << "CS " << neighbor << " ";
+            }
+            cout << endl;
         }
-        cout << endl;
     }
 
     cout << "\nNetwork statistics:\n";
     cout << "Total connections: " << connections.size() << "\n";
-    cout << "Total CS in network: " << adjacencyList.size() << "\n";
+    cout << "Active CS in network: " << adjList.size() << "\n";
 
-    if (hasCycle()) {
+    if (hasCycle(adjList)) {
         cout << "Warning: Network contains cycles\n";
     }
     else {
@@ -463,18 +663,22 @@ void PipelineSystem::viewNetwork() {
     }
     cout << endl;
 }
-
-bool PipelineSystem::hasCycleUtil(int v, unordered_map<int, bool>& visited, unordered_map<int, bool>& recStack) {
+bool PipelineSystem::hasCycleUtil(int v, unordered_map<int, bool>& visited,
+    unordered_map<int, bool>& recStack,
+    const unordered_map<int, vector<int>>& adjList) const {
     if (!visited[v]) {
         visited[v] = true;
         recStack[v] = true;
 
-        for (int neighbor : adjacencyList[v]) {
-            if (!visited[neighbor] && hasCycleUtil(neighbor, visited, recStack)) {
-                return true;
-            }
-            else if (recStack[neighbor]) {
-                return true;
+        auto it = adjList.find(v);
+        if (it != adjList.end()) {
+            for (int neighbor : it->second) {
+                if (!visited[neighbor] && hasCycleUtil(neighbor, visited, recStack, adjList)) {
+                    return true;
+                }
+                else if (recStack[neighbor]) {
+                    return true;
+                }
             }
         }
     }
@@ -482,20 +686,20 @@ bool PipelineSystem::hasCycleUtil(int v, unordered_map<int, bool>& visited, unor
     return false;
 }
 
-bool PipelineSystem::hasCycle() {
-    if (adjacencyList.empty()) return false;
+bool PipelineSystem::hasCycle(const unordered_map<int, vector<int>>& adjList) const {
+    if (adjList.empty()) return false;
 
     unordered_map<int, bool> visited;
     unordered_map<int, bool> recStack;
 
-    for (const auto& adj_pair : adjacencyList) {
+    for (const auto& adj_pair : adjList) {
         visited[adj_pair.first] = false;
         recStack[adj_pair.first] = false;
     }
 
-    for (const auto& adj_pair : adjacencyList) {
+    for (const auto& adj_pair : adjList) {
         int v = adj_pair.first;
-        if (!visited[v] && hasCycleUtil(v, visited, recStack)) {
+        if (!visited[v] && hasCycleUtil(v, visited, recStack, adjList)) {
             return true;
         }
     }
@@ -503,12 +707,18 @@ bool PipelineSystem::hasCycle() {
     return false;
 }
 
-void PipelineSystem::topologicalSortUtil(int v, unordered_map<int, bool>& visited, list<int>& stack) {
+
+void PipelineSystem::topologicalSortUtil(int v, unordered_map<int, bool>& visited,
+    list<int>& stack,
+    const unordered_map<int, vector<int>>& adjList) const {
     visited[v] = true;
 
-    for (int neighbor : adjacencyList[v]) {
-        if (!visited[neighbor]) {
-            topologicalSortUtil(neighbor, visited, stack);
+    auto it = adjList.find(v);
+    if (it != adjList.end()) {
+        for (int neighbor : it->second) {
+            if (!visited[neighbor]) {
+                topologicalSortUtil(neighbor, visited, stack, adjList);
+            }
         }
     }
 
@@ -516,12 +726,14 @@ void PipelineSystem::topologicalSortUtil(int v, unordered_map<int, bool>& visite
 }
 
 void PipelineSystem::topologicalSort() {
-    if (adjacencyList.empty()) {
+    auto adjList = buildAdjacencyList();
+
+    if (adjList.empty()) {
         cout << "Network is empty.\n\n";
         return;
     }
 
-    if (hasCycle()) {
+    if (hasCycle(adjList)) {
         cout << "Cannot perform topological sort: network contains cycles!\n";
         cout << "Topological sort is only possible for Directed Acyclic Graphs.\n\n";
         return;
@@ -529,15 +741,14 @@ void PipelineSystem::topologicalSort() {
 
     unordered_map<int, bool> visited;
     list<int> stack;
-
-    for (const auto& adj_pair : adjacencyList) {
+    for (const auto& adj_pair : adjList) {
         visited[adj_pair.first] = false;
     }
 
-    for (const auto& adj_pair : adjacencyList) {
+    for (const auto& adj_pair : adjList) {
         int v = adj_pair.first;
         if (!visited[v]) {
-            topologicalSortUtil(v, visited, stack);
+            topologicalSortUtil(v, visited, stack, adjList);
         }
     }
 
@@ -547,7 +758,7 @@ void PipelineSystem::topologicalSort() {
     for (int csId : stack) {
         cout << order << ". CS " << csId;
         if (stations.count(csId)) {
-            cout << " - " << stations[csId].getName();
+            cout << " - " << stations.at(csId).getName();
         }
         cout << endl;
         order++;
@@ -580,8 +791,9 @@ void PipelineSystem::saveToFile(const string& filename) {
 
         file << connections.size() << "\n";
         for (const auto& conn : connections) {
-            file << conn.getStartCS() << "\n" << conn.getEndCS() << "\n"
-                << conn.getPipeId() << "\n" << conn.getDiameter() << "\n";
+            file << conn.getStartCS() << "\n"
+                << conn.getEndCS() << "\n"
+                << conn.getPipeId() << "\n";
         }
 
         file.close();
@@ -598,7 +810,6 @@ void PipelineSystem::loadFromFile(const string& filename) {
         pipes.clear();
         stations.clear();
         connections.clear();
-        adjacencyList.clear();
 
         int pipeCount;
         file >> pipeCount;
@@ -624,13 +835,11 @@ void PipelineSystem::loadFromFile(const string& filename) {
         int connCount;
         file >> connCount;
         for (int i = 0; i < connCount; i++) {
-            int startCS, endCS, pipeId, diameter;
-            file >> startCS >> endCS >> pipeId >> diameter;
+            int startCS, endCS, pipeId;
+            file >> startCS >> endCS >> pipeId;
 
-            Connection conn(startCS, endCS, pipeId, diameter);
+            Connection conn(startCS, endCS, pipeId);
             connections.push_back(conn);
-
-            adjacencyList[startCS].push_back(endCS);
 
             if (pipes.count(pipeId)) {
                 pipes[pipeId].setInUse(true);

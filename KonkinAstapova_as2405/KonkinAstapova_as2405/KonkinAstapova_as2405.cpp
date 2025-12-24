@@ -43,98 +43,115 @@ int main(int argc, char* argv[])
         showMenu();
 
         int action;
-        cout << "Select action (0-15): ";
-        action = GetCorrectNumber<int>(0, 15);
+        cout << "Select action (0-16): ";
+        action = GetCorrectNumber<int>(0, 16);
 
-        try {
-            switch (action) {
-            case 0:
-                cout << "Exiting program..." << endl;
-                if (original_cin) {
-                    cin.rdbuf(original_cin);
-                }
-                return 0;
-
-            case 1:
-                system.addPipe();
-                break;
-
-            case 2:
-                system.addCS();
-                break;
-
-            case 3:
-                system.viewAllObjects();
-                break;
-
-            case 4:
-                system.editPipe();
-                break;
-
-            case 5:
-                system.editCS();
-                break;
-
-            case 6:
-                system.deletePipe();
-                break;
-
-            case 7:
-                system.deleteCS();
-                break;
-
-            case 8:
-                system.searchPipesMenu();
-                break;
-
-            case 9:
-                system.searchCSMenu();
-                break;
-
-            case 10: {
-                string name;
-                cout << "Enter pipe name for batch editing: ";
-                INPUT_LINE(cin, name);
-                unordered_set<int> results = system.findPipesByName(name);
-                system.batchEditPipes(results);
-                break;
+        switch (action) {
+        case 0:
+            cout << "Exiting program..." << endl;
+            if (original_cin) {
+                cin.rdbuf(original_cin);
             }
+            return 0;
 
-            case 11:
-                system.connectCS();
-                break;
+        case 1:
+            system.addPipe();
+            break;
 
-            case 12:
-                system.viewNetwork();
-                break;
+        case 2:
+            system.addCS();
+            break;
 
-            case 13:
-                system.topologicalSort();
-                break;
+        case 3:
+            system.viewAllObjects();
+            break;
 
-            case 14: {
-                string filename;
-                cout << "Enter filename to save DATA: ";
-                INPUT_LINE(cin, filename);
-                system.saveToFile(filename);
-                break;
-            }
+        case 4:
+            system.editPipe();
+            break;
 
-            case 15: {
-                string filename;
-                cout << "Enter filename to load DATA: ";
-                INPUT_LINE(cin, filename);
-                system.loadFromFile(filename);
-                break;
-            }
+        case 5:
+            system.editCS();
+            break;
 
-            default:
-                cout << "Invalid action. Please try again.\n\n";
-                break;
-            }
+        case 6:
+            system.deletePipe();
+            break;
+
+        case 7:
+            system.deleteCS();
+            break;
+
+        case 8:
+            system.searchPipesMenu();
+            break;
+
+        case 9:
+            system.searchCSMenu();
+            break;
+
+        case 10: {
+            string name;
+            cout << "Enter pipe name for batch editing: ";
+            INPUT_LINE(cin, name);
+            unordered_set<int> results = system.findPipesByName(name);
+            system.batchEditPipes(results);
+            break;
         }
-        catch (const exception& e) {
-            cout << "Error: " << e.what() << "\n\n";
+
+        case 11:
+            system.connectCS();
+            break;
+
+        case 12: {
+            cout << "Disconnect options:\n";
+            cout << "1. Disconnect specific connection (CS -> CS)\n";
+            cout << "2. Disconnect all connections with CS\n";
+            cout << "3. Disconnect connections by pipe\n";
+            cout << "Choice: ";
+            int choice = GetCorrectNumber<int>(1, 3);
+
+            switch (choice) {
+            case 1:
+                system.disconnectConnection();
+                break;
+            case 2:
+                system.disconnectCS();
+                break;
+            case 3:
+                system.disconnectByPipe();
+                break;
+            }
+            break;
+        }
+
+        case 13:
+            system.viewNetwork();
+            break;
+
+        case 14:
+            system.topologicalSort();
+            break;
+
+        case 15: {
+            string filename;
+            cout << "Enter filename to save data: ";
+            INPUT_LINE(cin, filename);
+            system.saveToFile(filename);
+            break;
+        }
+
+        case 16: {
+            string filename;
+            cout << "Enter filename to load data: ";
+            INPUT_LINE(cin, filename);
+            system.loadFromFile(filename);
+            break;
+        }
+
+        default:
+            cout << "Invalid action. Please try again.\n\n";
+            break;
         }
     }
 
